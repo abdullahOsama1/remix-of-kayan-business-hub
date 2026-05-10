@@ -37,9 +37,8 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </CartProvider>
-      </Toaster>
-    </BrowserRouter>
-  </TooltipProvider>
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 
