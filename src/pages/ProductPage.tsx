@@ -66,7 +66,7 @@ export default function ProductPage() {
             <Selector label="اللون" options={product.colors} value={color} onChange={setColor} />
           )}
           {product.conditions && (
-            <Selector label="الحالة" options={product.conditions} value={condition} onChange={setCondition} />
+            <Selector label="الحالة" options={product.conditions as string[]} value={condition} onChange={(v) => setCondition(v as typeof condition)} />
           )}
 
           {typeof product.battery === "number" && (
