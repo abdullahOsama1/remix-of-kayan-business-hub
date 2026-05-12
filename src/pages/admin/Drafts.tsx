@@ -18,7 +18,7 @@ export default function AdminDrafts() {
   const load = async () => {
     setLoading(true);
     const { data } = await supabase.from("ai_drafts").select("*").order("created_at", { ascending: false });
-    setList((data ?? []) as Draft[]);
+    setList((data ?? []) as unknown as Draft[]);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);

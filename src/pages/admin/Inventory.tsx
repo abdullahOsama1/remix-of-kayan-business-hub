@@ -36,10 +36,10 @@ export default function AdminInventory() {
 
   const save = async () => {
     if (!editing?.product_id) return toast.error("اختر منتجاً");
-    const payload = { ...editing, cost_price: Number(editing.cost_price) || 0, battery: editing.battery ? Number(editing.battery) : null };
+    const payload: any = { ...editing, cost_price: Number(editing.cost_price) || 0, battery: editing.battery ? Number(editing.battery) : null };
     const { error } = editing.id
       ? await supabase.from("inventory_items").update(payload).eq("id", editing.id)
-      : await supabase.from("inventory_items").insert(payload as any);
+      : await supabase.from("inventory_items").insert(payload);
     if (error) return toast.error(error.message);
     setEditing(null);
     load();
