@@ -5,7 +5,7 @@ export const KAYAN = {
   brandAr: "كيان",
   tagline: "تجربة فاخرة. طلب بضغطة واحدة.",
   // International format, digits only (no +). Used for wa.me links.
-  whatsappNumber: "970599000000",
+  whatsappNumber: "201000000000",
   instagram: "https://instagram.com/kayan",
   tiktok: "https://tiktok.com/@kayan",
   email: "hello@kayan.store",

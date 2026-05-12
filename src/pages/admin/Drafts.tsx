@@ -1,0 +1,137 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { PageContainer, PageHeader } from "@/components/admin/Page";
+import { Loader2, Sparkles, Check, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+type Parsed = { name: string; brand?: string; storage?: string; color?: string; condition?: string; battery?: number; price?: number; cost_price?: number; notes?: string; category?: string };
+type Draft = { id: string; raw_input: string | null; parsed: Parsed[]; status: string; created_at: string };
+
+const slugify = (s: string) => s.toLowerCase().trim().replace(/[^\w\u0600-\u06FF]+/g, "-").replace(/^-|-$/g, "") || `p-${Date.now()}`;
+
+export default function AdminDrafts() {
+  const [list, setList] = useState<Draft[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [raw, setRaw] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    const { data } = await supabase.from("ai_drafts").select("*").order("created_at", { ascending: false });
+    setList((data ?? []) as unknown as Draft[]);
+    setLoading(false);
+  };
+  useEffect(() => { load(); }, []);
+
+  const parse = async () => {
+    if (!raw.trim()) return;
+    setBusy(true);
+    const { data, error } = await supabase.functions.invoke("ai-parse-products", { body: { text: raw } });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    if (!data?.products?.length) return toast.error("لم يُستخرج أي منتج");
+    const { error: e2 } = await supabase.from("ai_drafts").insert({ raw_input: raw, parsed: data.products, source: "text" } as any);
+    if (e2) return toast.error(e2.message);
+    setRaw("");
+    toast.success(`تم استخراج ${data.products.length} منتج`);
+    load();
+  };
+
+  const updateItem = async (draft: Draft, idx: number, patch: Partial<Parsed>) => {
+    const next = draft.parsed.map((p, i) => (i === idx ? { ...p, ...patch } : p));
+    await supabase.from("ai_drafts").update({ parsed: next as any }).eq("id", draft.id);
+    setList((l) => l.map((d) => (d.id === draft.id ? { ...d, parsed: next } : d)));
+  };
+
+  const approve = async (draft: Draft) => {
+    const rows = draft.parsed.map((p) => ({
+      slug: slugify(`${p.name}-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`),
+      name_ar: p.name,
+      brand: p.brand ?? null,
+      price: Number(p.price) || 0,
+      cost_price: Number(p.cost_price) || 0,
+      quantity: 1,
+      available: true,
+      condition: p.condition ?? null,
+      notes: [p.storage, p.color, p.battery ? `بطارية ${p.battery}%` : "", p.notes].filter(Boolean).join(" · "),
+      images: [],
+    }));
+    const { error } = await supabase.from("products").insert(rows as any);
+    if (error) return toast.error(error.message);
+    await supabase.from("ai_drafts").update({ status: "approved" as any }).eq("id", draft.id);
+    toast.success(`تم اعتماد ${rows.length} منتج إلى المخزون`);
+    load();
+  };
+
+  const remove = async (id: string) => {
+    if (!confirm("حذف المسودة؟")) return;
+    await supabase.from("ai_drafts").delete().eq("id", id);
+    load();
+  };
+
+  return (
+    <PageContainer>
+      <PageHeader title="الاستيراد الذكي" subtitle="الصق رسائل واتساب — يستخرج المنتجات تلقائياً" />
+
+      <div className="bg-background rounded-2xl border border-border p-5 mb-6">
+        <textarea
+          value={raw}
+          onChange={(e) => setRaw(e.target.value)}
+          rows={6}
+          placeholder="ألصق رسائل واتساب هنا (يمكن لصق عدة منتجات)..."
+          className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-sm focus:outline-none focus:border-foreground"
+        />
+        <div className="flex justify-end mt-3">
+          <button onClick={parse} disabled={busy || !raw.trim()} className="h-11 px-6 rounded-full bg-foreground text-background text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" strokeWidth={1.75} />}
+            تحليل بالذكاء الاصطناعي
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-20"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+      ) : list.length === 0 ? (
+        <div className="text-center text-muted-foreground py-12">لا توجد مسودات بعد.</div>
+      ) : (
+        <div className="space-y-6">
+          {list.map((d) => (
+            <div key={d.id} className="bg-background rounded-2xl border border-border overflow-hidden">
+              <div className="flex items-center justify-between p-4 border-b border-border">
+                <div className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleString("ar-EG")} · <span className="px-2 py-0.5 rounded-full bg-muted">{d.status}</span></div>
+                <div className="flex gap-2">
+                  {d.status === "pending" && (
+                    <button onClick={() => approve(d)} className="h-9 px-4 rounded-full bg-accent text-accent-foreground text-xs font-medium inline-flex items-center gap-1">
+                      <Check className="h-3.5 w-3.5" /> اعتماد إلى المخزون
+                    </button>
+                  )}
+                  <button onClick={() => remove(d.id)} className="h-9 w-9 rounded-full hover:bg-muted text-muted-foreground hover:text-destructive inline-flex items-center justify-center"><Trash2 className="h-4 w-4" strokeWidth={1.5} /></button>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-surface text-muted-foreground text-xs">
+                    <tr><th className="text-start p-3">الاسم</th><th className="text-start p-3">السعة</th><th className="text-start p-3">اللون</th><th className="text-start p-3">البطارية</th><th className="text-start p-3">الحالة</th><th className="text-start p-3">السعر</th><th className="text-start p-3">التكلفة</th></tr>
+                  </thead>
+                  <tbody>
+                    {d.parsed.map((p, i) => (
+                      <tr key={i} className="border-t border-border">
+                        <td className="p-2"><input value={p.name ?? ""} onChange={(e) => updateItem(d, i, { name: e.target.value })} className="w-44 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                        <td className="p-2"><input value={p.storage ?? ""} onChange={(e) => updateItem(d, i, { storage: e.target.value })} className="w-20 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                        <td className="p-2"><input value={p.color ?? ""} onChange={(e) => updateItem(d, i, { color: e.target.value })} className="w-24 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                        <td className="p-2"><input type="number" value={p.battery ?? ""} onChange={(e) => updateItem(d, i, { battery: Number(e.target.value) })} className="w-16 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                        <td className="p-2"><input value={p.condition ?? ""} onChange={(e) => updateItem(d, i, { condition: e.target.value })} className="w-24 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                        <td className="p-2"><input type="number" value={p.price ?? ""} onChange={(e) => updateItem(d, i, { price: Number(e.target.value) })} className="w-24 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                        <td className="p-2"><input type="number" value={p.cost_price ?? ""} onChange={(e) => updateItem(d, i, { cost_price: Number(e.target.value) })} className="w-24 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </PageContainer>
+  );
+}
