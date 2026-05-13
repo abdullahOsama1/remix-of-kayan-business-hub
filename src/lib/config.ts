@@ -1,9 +1,10 @@
 // KAYAN brand & runtime config
 // TODO: replace WHATSAPP_NUMBER with the real number when provided.
 export const KAYAN = {
-  brand: "KΛYΛN",
+  brand: "KAYAN",
   brandAr: "كيان",
-  tagline: "تجربة فاخرة. طلب بضغطة واحدة.",
+  tagline: "Store Everything — Guaranteed & Fast Choices",
+  taglineAr: "كل ما تحتاجه — اختيارات مضمونة وسريعة",
   // International format, digits only (no +). Used for wa.me links.
   whatsappNumber: "201000000000",
   instagram: "https://instagram.com/kayan",
