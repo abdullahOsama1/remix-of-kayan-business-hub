@@ -13,17 +13,17 @@ const Index = () => {
       <section className="bg-hero">
         <div className="container-kayan grid lg:grid-cols-2 gap-10 items-center pt-12 pb-20 lg:pt-20 lg:pb-28">
           <div className="order-2 lg:order-1 animate-fade-up">
-            <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-muted-foreground mb-6 wordmark">
-              <span className="h-px w-8 bg-foreground/30" /> KΛYΛN · كيان
+            <span className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.32em] text-accent mb-6 tagline">
+              <span className="h-px w-8 bg-accent/40" /> KAYAN · Store Everything
             </span>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight">
-              تجربة فاخرة.
+              كل ما تحتاجه،
               <br />
-              <span className="text-muted-foreground">طلب بضغطة واحدة.</span>
+              <span className="text-accent">اختيارات مضمونة وسريعة.</span>
             </h1>
             <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-md leading-8">
-              أحدث الهواتف، إكسسوارات مختارة بعناية، وخدمات كيان لاب — كل شيء في مكان واحد،
-              بتجربة شراء سلسة عبر واتساب.
+              إلكترونيات، عطور فاخرة، وخدمات كيان لاب البرمجية —
+              كل شيء في مكان واحد، بتجربة شراء سلسة عبر واتساب.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link

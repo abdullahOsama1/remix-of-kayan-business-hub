@@ -7,11 +7,13 @@ export function Footer() {
     <footer className="bg-surface mt-24 hairline">
       <div className="container-kayan py-14 grid gap-10 md:grid-cols-4">
         <div className="md:col-span-2">
-          <div className="wordmark text-2xl">KΛYΛN</div>
-          <div className="text-muted-foreground text-sm mt-1">كيان</div>
+          <div className="wordmark text-2xl">KAYAN</div>
+          <div className="tagline text-[11px] text-muted-foreground mt-1">
+            Store Everything · Guaranteed & Fast Choices
+          </div>
           <p className="text-sm text-muted-foreground mt-4 max-w-sm leading-7">
-            متجر فاخر للهواتف والإكسسوارات والخدمات. خدمة شخصية، طلب سريع عبر واتساب،
-            وضمان حقيقي على كل منتج.
+            متجر كيان — إلكترونيات، عطور، وخدمات كيان لاب البرمجية. تجربة سلسة، طلب مباشر عبر واتساب،
+            وضمان حقيقي على كل ما نقدّمه.
           </p>
           <div className="flex gap-2 mt-5">
             <a href={KAYAN.instagram} target="_blank" rel="noreferrer" aria-label="Instagram"
@@ -49,9 +51,15 @@ export function Footer() {
         </div>
       </div>
       <div className="hairline">
-        <div className="container-kayan py-5 text-xs text-muted-foreground flex justify-between">
-          <span>© {new Date().getFullYear()} KΛYΛN. جميع الحقوق محفوظة.</span>
-          <span className="font-en">Made with care.</span>
+        <div className="container-kayan py-5 text-xs text-muted-foreground flex justify-between items-center">
+          <span>© {new Date().getFullYear()} KAYAN. جميع الحقوق محفوظة.</span>
+          <Link
+            to="/kayan-control"
+            className="opacity-40 hover:opacity-100 hover:text-foreground transition-opacity font-en"
+            aria-label="Admin"
+          >
+            Admin
+          </Link>
         </div>
       </div>
     </footer>
