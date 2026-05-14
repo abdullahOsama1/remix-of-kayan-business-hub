@@ -1,17 +1,24 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getProduct } from "@/lib/products";
+import { useProduct } from "@/lib/products";
 import { formatPrice } from "@/lib/config";
 import { useCart } from "@/lib/cart";
-import { Check, ShoppingBag, MessageCircle, ArrowRight } from "lucide-react";
+import { Check, ShoppingBag, MessageCircle, ArrowRight, Loader2 } from "lucide-react";
 
 export default function ProductPage() {
   const { slug = "" } = useParams();
-  const product = getProduct(slug);
+  const { product, loading } = useProduct(slug);
   const { add, setOpen, whatsappUrl } = useCart();
-  const [storage, setStorage] = useState(product?.storage?.[0]);
-  const [color, setColor] = useState(product?.colors?.[0]);
-  const [condition, setCondition] = useState(product?.conditions?.[0]);
+  const [storage, setStorage] = useState<string | undefined>();
+  const [color, setColor] = useState<string | undefined>();
+
+  if (loading) {
+    return (
+      <div className="container-kayan py-32 flex justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -22,12 +29,25 @@ export default function ProductPage() {
     );
   }
 
+  const storageOpts = product.storage;
+  const colorOpts = product.colors;
+  const activeStorage = storage ?? storageOpts[0];
+  const activeColor = color ?? colorOpts[0];
+
   const onAdd = () => {
-    add({ productId: product.id, storage, color, condition });
+    add({
+      productId: product.id,
+      slug: product.slug,
+      name: product.name,
+      image: product.image,
+      price: product.price,
+      storage: activeStorage,
+      color: activeColor,
+    });
   };
 
   const onBuyNow = () => {
-    add({ productId: product.id, storage, color, condition });
+    onAdd();
     setOpen(false);
     window.open(whatsappUrl, "_blank");
   };
@@ -49,7 +69,7 @@ export default function ProductPage() {
         </div>
 
         <div>
-          <div className="text-xs text-muted-foreground">{product.brand} · {product.categoryLabel}</div>
+          <div className="text-xs text-muted-foreground">{product.brand}{product.categoryLabel ? ` · ${product.categoryLabel}` : ""}</div>
           <h1 className="text-3xl sm:text-4xl font-bold mt-2 leading-tight">{product.name}</h1>
           <div className="mt-4 flex items-baseline gap-3">
             <span className="text-3xl font-bold">{formatPrice(product.price)}</span>
@@ -57,22 +77,13 @@ export default function ProductPage() {
               <span className="text-muted-foreground line-through">{formatPrice(product.oldPrice)}</span>
             )}
           </div>
-          <p className="mt-6 text-muted-foreground leading-8">{product.description}</p>
+          {product.description && <p className="mt-6 text-muted-foreground leading-8">{product.description}</p>}
 
-          {product.storage && (
-            <Selector label="السعة" options={product.storage} value={storage} onChange={setStorage} />
+          {storageOpts.length > 0 && (
+            <Selector label="السعة" options={storageOpts} value={activeStorage} onChange={setStorage} />
           )}
-          {product.colors && (
-            <Selector label="اللون" options={product.colors} value={color} onChange={setColor} />
-          )}
-          {product.conditions && (
-            <Selector label="الحالة" options={product.conditions as string[]} value={condition} onChange={(v) => setCondition(v as typeof condition)} />
-          )}
-
-          {typeof product.battery === "number" && (
-            <div className="mt-6 inline-flex items-center gap-2 text-sm text-muted-foreground">
-              <Check className="h-4 w-4 text-accent" strokeWidth={2} /> صحة البطارية: {product.battery}%
-            </div>
+          {colorOpts.length > 0 && (
+            <Selector label="اللون" options={colorOpts} value={activeColor} onChange={setColor} />
           )}
 
           <div className="mt-8 flex flex-col sm:flex-row gap-3">
@@ -103,9 +114,9 @@ export default function ProductPage() {
   );
 }
 
-function Selector<T extends string>({
+function Selector({
   label, options, value, onChange,
-}: { label: string; options: T[]; value?: T; onChange: (v: T) => void }) {
+}: { label: string; options: string[]; value?: string; onChange: (v: string) => void }) {
   return (
     <div className="mt-6">
       <div className="text-sm font-medium mb-3">{label}</div>

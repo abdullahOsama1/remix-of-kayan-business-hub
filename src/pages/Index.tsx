@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Shield, Truck, Sparkles, Wrench } from "lucide-react";
 import heroComposition from "@/assets/hero-composition.jpg";
-import { featuredProducts, categories } from "@/lib/products";
+import { useProducts, useCategories } from "@/lib/products";
 import { ProductCard } from "@/components/kayan/ProductCard";
 
 const Index = () => {
-  const featured = featuredProducts();
+  const { products } = useProducts();
+  const categories = useCategories();
+  const featured = products.slice(0, 4);
 
   return (
     <>
@@ -136,7 +138,7 @@ const Index = () => {
           {categories.map((c) => (
             <Link
               key={c.id}
-              to={`/shop?cat=${c.id}`}
+              to={`/shop?cat=${c.slug}`}
               className="group relative aspect-[4/5] rounded-2xl bg-surface overflow-hidden p-6 flex flex-col justify-between hover:shadow-soft transition-shadow"
             >
               <span className="text-xs text-muted-foreground wordmark">

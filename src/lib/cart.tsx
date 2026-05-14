@@ -1,10 +1,13 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { products, type Product } from "./products";
 import { KAYAN, formatPrice } from "./config";
 
 export interface CartItem {
-  id: string; // unique line id
+  id: string;
   productId: string;
+  slug: string;
+  name: string;
+  image: string;
+  price: number;
   qty: number;
   storage?: string;
   color?: string;
@@ -25,7 +28,7 @@ interface CartContextValue {
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
-const STORAGE_KEY = "kayan_cart_v1";
+const STORAGE_KEY = "kayan_cart_v2";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>(() => {
@@ -42,9 +45,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items]);
-
-  const productOf = (id: string): Product | undefined =>
-    products.find((p) => p.id === id);
 
   const add: CartContextValue["add"] = (data) => {
     const qty = data.qty ?? 1;
@@ -66,6 +66,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
         {
           id: `${data.productId}-${Date.now()}`,
           productId: data.productId,
+          slug: data.slug,
+          name: data.name,
+          image: data.image,
+          price: data.price,
           qty,
           storage: data.storage,
           color: data.color,
@@ -78,20 +82,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const remove = (id: string) => setItems((c) => c.filter((i) => i.id !== id));
   const setQty = (id: string, qty: number) =>
-    setItems((c) =>
-      c.map((i) => (i.id === id ? { ...i, qty: Math.max(1, qty) } : i)),
-    );
+    setItems((c) => c.map((i) => (i.id === id ? { ...i, qty: Math.max(1, qty) } : i)));
   const clear = () => setItems([]);
 
   const total = useMemo(
-    () =>
-      items.reduce((sum, i) => {
-        const p = productOf(i.productId);
-        return sum + (p?.price ?? 0) * i.qty;
-      }, 0),
+    () => items.reduce((sum, i) => sum + i.price * i.qty, 0),
     [items],
   );
-
   const count = items.reduce((s, i) => s + i.qty, 0);
 
   const whatsappUrl = useMemo(() => {
@@ -100,16 +97,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     lines.push("*طلب جديد من متجر KΛYΛN — كيان*");
     lines.push("");
     items.forEach((i, idx) => {
-      const p = productOf(i.productId);
-      if (!p) return;
-      lines.push(`${idx + 1}. ${p.name}`);
+      lines.push(`${idx + 1}. ${i.name}`);
       const opts: string[] = [];
       if (i.storage) opts.push(`السعة: ${i.storage}`);
       if (i.color) opts.push(`اللون: ${i.color}`);
       if (i.condition) opts.push(`الحالة: ${i.condition}`);
       if (opts.length) lines.push(`   • ${opts.join(" — ")}`);
       lines.push(`   • الكمية: ${i.qty}`);
-      lines.push(`   • السعر: ${formatPrice(p.price * i.qty)}`);
+      lines.push(`   • السعر: ${formatPrice(i.price * i.qty)}`);
       lines.push("");
     });
     lines.push(`*الإجمالي: ${formatPrice(total)}*`);

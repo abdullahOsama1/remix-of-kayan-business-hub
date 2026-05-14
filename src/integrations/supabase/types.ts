@@ -465,6 +465,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      recount_product_quantity: { Args: { _pid: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin"

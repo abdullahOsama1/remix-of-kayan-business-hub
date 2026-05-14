@@ -195,85 +195,156 @@ export default function AdminProducts() {
       )}
 
       <Sheet open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
-        <SheetContent side="left" className="w-full sm:max-w-lg overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="text-right">
-              {editing?.id ? "تعديل منتج" : "منتج جديد"}
+        <SheetContent side="left" className="w-full sm:max-w-xl overflow-y-auto p-0">
+          <SheetHeader className="px-8 pt-8 pb-5 border-b border-border">
+            <SheetTitle className="text-right text-xl font-semibold tracking-tight">
+              {editing?.id ? "تعديل المنتج" : "منتج جديد"}
             </SheetTitle>
+            <p className="text-right text-xs text-muted-foreground mt-1">
+              املأ التفاصيل بعناية — تظهر للعملاء فوراً.
+            </p>
           </SheetHeader>
+
           {editing && (
-            <div className="mt-6 space-y-4">
-              <Field label="الاسم بالعربية">
-                <input value={editing.name_ar ?? ""} onChange={(e) => setEditing({ ...editing, name_ar: e.target.value })} className={inputCls} />
-              </Field>
-              <Field label="الاسم بالإنجليزية">
-                <input value={editing.name_en ?? ""} onChange={(e) => setEditing({ ...editing, name_en: e.target.value })} className={inputCls} />
-              </Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="الماركة">
-                  <input value={editing.brand ?? ""} onChange={(e) => setEditing({ ...editing, brand: e.target.value })} className={inputCls} />
+            <div className="px-8 py-7 space-y-9">
+              <Section title="المعلومات الأساسية">
+                <Field label="الاسم بالعربية" required>
+                  <input
+                    value={editing.name_ar ?? ""}
+                    onChange={(e) => setEditing({ ...editing, name_ar: e.target.value })}
+                    placeholder="مثال: iPhone 15 Pro"
+                    className={inputCls}
+                  />
                 </Field>
-                <Field label="التصنيف">
-                  <select value={editing.category_id ?? ""} onChange={(e) => setEditing({ ...editing, category_id: e.target.value || null })} className={inputCls}>
-                    <option value="">—</option>
-                    {cats.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name_ar}</option>
-                    ))}
-                  </select>
+                <Field label="الاسم بالإنجليزية">
+                  <input
+                    value={editing.name_en ?? ""}
+                    onChange={(e) => setEditing({ ...editing, name_en: e.target.value })}
+                    placeholder="iPhone 15 Pro"
+                    dir="ltr"
+                    className={inputCls}
+                  />
                 </Field>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <Field label="السعر">
-                  <input type="number" value={editing.price ?? 0} onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })} className={inputCls} />
-                </Field>
-                <Field label="السعر القديم">
-                  <input type="number" value={editing.old_price ?? ""} onChange={(e) => setEditing({ ...editing, old_price: e.target.value ? Number(e.target.value) : null })} className={inputCls} />
-                </Field>
-                <Field label="التكلفة">
-                  <input type="number" value={editing.cost_price ?? 0} onChange={(e) => setEditing({ ...editing, cost_price: Number(e.target.value) })} className={inputCls} />
-                </Field>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="الكمية">
-                  <input type="number" value={editing.quantity ?? 0} onChange={(e) => setEditing({ ...editing, quantity: Number(e.target.value) })} className={inputCls} />
-                </Field>
-                <Field label="الحالة">
-                  <select value={editing.condition ?? ""} onChange={(e) => setEditing({ ...editing, condition: e.target.value })} className={inputCls}>
-                    <option value="">—</option>
-                    <option value="جديد">جديد</option>
-                    <option value="مستعمل">مستعمل</option>
-                    <option value="مجدد">مجدد</option>
-                  </select>
-                </Field>
-              </div>
-              <Field label="صور المنتج">
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="الماركة">
+                    <input
+                      value={editing.brand ?? ""}
+                      onChange={(e) => setEditing({ ...editing, brand: e.target.value })}
+                      placeholder="Apple"
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="التصنيف">
+                    <select
+                      value={editing.category_id ?? ""}
+                      onChange={(e) => setEditing({ ...editing, category_id: e.target.value || null })}
+                      className={inputCls}
+                    >
+                      <option value="">— اختر —</option>
+                      {cats.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name_ar}</option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+              </Section>
+
+              <Section title="التسعير والمخزون">
+                <div className="grid grid-cols-3 gap-4">
+                  <Field label="السعر" required>
+                    <input
+                      type="number"
+                      value={editing.price ?? 0}
+                      onChange={(e) => setEditing({ ...editing, price: Number(e.target.value) })}
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="السعر القديم" hint="اختياري">
+                    <input
+                      type="number"
+                      value={editing.old_price ?? ""}
+                      onChange={(e) =>
+                        setEditing({ ...editing, old_price: e.target.value ? Number(e.target.value) : null })
+                      }
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="التكلفة">
+                    <input
+                      type="number"
+                      value={editing.cost_price ?? 0}
+                      onChange={(e) => setEditing({ ...editing, cost_price: Number(e.target.value) })}
+                      className={inputCls}
+                    />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="الكمية" hint="تتزامن تلقائياً مع المخزون">
+                    <input
+                      type="number"
+                      value={editing.quantity ?? 0}
+                      onChange={(e) => setEditing({ ...editing, quantity: Number(e.target.value) })}
+                      className={inputCls}
+                    />
+                  </Field>
+                  <Field label="الحالة">
+                    <select
+                      value={editing.condition ?? ""}
+                      onChange={(e) => setEditing({ ...editing, condition: e.target.value })}
+                      className={inputCls}
+                    >
+                      <option value="">—</option>
+                      <option value="جديد">جديد</option>
+                      <option value="مستعمل">مستعمل</option>
+                      <option value="مجدد">مجدد</option>
+                    </select>
+                  </Field>
+                </div>
+              </Section>
+
+              <Section title="الصور" subtitle="اسحب وأفلت أو ارفع مباشرة من جهازك">
                 <ImageUploader
                   value={editing.images ?? []}
                   onChange={(images) => setEditing({ ...editing, images })}
                 />
-              </Field>
-              <Field label="الوصف">
+              </Section>
+
+              <Section title="الوصف">
                 <textarea
                   value={editing.description ?? ""}
                   onChange={(e) => setEditing({ ...editing, description: e.target.value })}
-                  rows={3}
-                  className={inputCls}
+                  rows={4}
+                  placeholder="وصف موجز يبرز مزايا المنتج..."
+                  className={`${inputCls} h-auto py-3 leading-7`}
                 />
-              </Field>
-              <label className="flex items-center gap-2 text-sm">
+              </Section>
+
+              <label className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-border bg-surface">
+                <div>
+                  <div className="text-sm font-medium">متاح للبيع</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    يُخفى تلقائياً عندما تصل الكمية إلى صفر.
+                  </div>
+                </div>
                 <input
                   type="checkbox"
                   checked={editing.available ?? true}
                   onChange={(e) => setEditing({ ...editing, available: e.target.checked })}
+                  className="h-5 w-5 accent-foreground"
                 />
-                متاح للبيع
               </label>
 
-              <div className="flex gap-3 pt-4">
-                <button onClick={save} className="flex-1 h-11 rounded-full bg-foreground text-background text-sm font-medium">
-                  حفظ
+              <div className="flex gap-3 pt-2 sticky bottom-0 bg-background py-4 -mx-8 px-8 border-t border-border">
+                <button
+                  onClick={save}
+                  className="flex-1 h-12 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity"
+                >
+                  حفظ المنتج
                 </button>
-                <button onClick={() => setEditing(null)} className="flex-1 h-11 rounded-full bg-surface text-foreground text-sm">
+                <button
+                  onClick={() => setEditing(null)}
+                  className="h-12 px-6 rounded-full bg-surface text-foreground text-sm hover:bg-muted transition-colors"
+                >
                   إلغاء
                 </button>
               </div>
@@ -285,12 +356,34 @@ export default function AdminProducts() {
   );
 }
 
-const inputCls = "w-full h-10 px-3 rounded-lg bg-surface border border-border text-sm focus:outline-none focus:border-foreground";
+const inputCls =
+  "w-full h-11 px-4 rounded-xl bg-background border border-border text-sm focus:outline-none focus:border-foreground focus:ring-2 focus:ring-foreground/5 transition-all placeholder:text-muted-foreground/60";
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Section({
+  title, subtitle, children,
+}: { title: string; subtitle?: string; children: React.ReactNode }) {
+  return (
+    <section className="space-y-4">
+      <div>
+        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{title}</h3>
+        {subtitle && <p className="text-xs text-muted-foreground/80 mt-1">{subtitle}</p>}
+      </div>
+      <div className="space-y-4">{children}</div>
+    </section>
+  );
+}
+
+function Field({
+  label, required, hint, children,
+}: { label: string; required?: boolean; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-xs text-muted-foreground mb-1 block">{label}</label>
+      <div className="flex items-baseline justify-between mb-1.5">
+        <label className="text-xs font-medium text-foreground">
+          {label} {required && <span className="text-destructive">*</span>}
+        </label>
+        {hint && <span className="text-[10px] text-muted-foreground">{hint}</span>}
+      </div>
       {children}
     </div>
   );
