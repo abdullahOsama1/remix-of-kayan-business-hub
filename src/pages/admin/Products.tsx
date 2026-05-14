@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Copy, Loader2, Search } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/config";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 
 type Product = {
   id: string;
@@ -245,12 +246,10 @@ export default function AdminProducts() {
                   </select>
                 </Field>
               </div>
-              <Field label="رابط الصورة">
-                <input
-                  value={(editing.images ?? [])[0] ?? ""}
-                  onChange={(e) => setEditing({ ...editing, images: e.target.value ? [e.target.value] : [] })}
-                  placeholder="https://..."
-                  className={inputCls}
+              <Field label="صور المنتج">
+                <ImageUploader
+                  value={editing.images ?? []}
+                  onChange={(images) => setEditing({ ...editing, images })}
                 />
               </Field>
               <Field label="الوصف">
