@@ -138,7 +138,7 @@ const Index = () => {
           {categories.map((c) => (
             <Link
               key={c.id}
-              to={`/shop?cat=${c.id}`}
+              to={`/shop?cat=${c.slug}`}
               className="group relative aspect-[4/5] rounded-2xl bg-surface overflow-hidden p-6 flex flex-col justify-between hover:shadow-soft transition-shadow"
             >
               <span className="text-xs text-muted-foreground wordmark">
