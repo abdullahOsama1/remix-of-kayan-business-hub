@@ -25,7 +25,7 @@ const nav = [
 ];
 
 export default function AdminLayout() {
-  const { session, isAdmin, loading, signOut } = useAuth();
+  const { isAdmin, loading, signOut } = useAuth();
   const navTo = useNavigate();
 
   if (loading)
