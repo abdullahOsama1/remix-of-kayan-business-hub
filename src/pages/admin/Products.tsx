@@ -20,6 +20,7 @@ type Product = {
   cost_price: number;
   quantity: number;
   available: boolean;
+  status: "draft" | "published";
   images: string[];
   condition: string | null;
   notes: string | null;
@@ -34,6 +35,7 @@ const empty: Partial<Product> = {
   cost_price: 0,
   quantity: 1,
   available: true,
+  status: "draft",
   images: [],
   description: "",
   condition: "",
