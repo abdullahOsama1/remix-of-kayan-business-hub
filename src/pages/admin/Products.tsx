@@ -133,14 +133,27 @@ export default function AdminProducts() {
         }
       />
 
-      <div className="relative mb-5">
-        <Search className="absolute top-1/2 -translate-y-1/2 end-4 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="بحث..."
-          className="w-full h-11 pe-11 ps-4 rounded-full bg-background border border-border text-sm focus:outline-none focus:border-foreground"
-        />
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="absolute top-1/2 -translate-y-1/2 end-4 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="بحث..."
+            className="w-full h-11 pe-11 ps-4 rounded-full bg-background border border-border text-sm focus:outline-none focus:border-foreground"
+          />
+        </div>
+        <div className="inline-flex rounded-full bg-surface border border-border p-1 text-xs">
+          {(["all", "published", "draft"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 h-9 rounded-full transition-colors ${tab === t ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {t === "all" ? "الكل" : t === "published" ? "منشور" : "مسودات"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
