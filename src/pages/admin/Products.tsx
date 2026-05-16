@@ -84,22 +84,23 @@ export default function AdminProducts() {
     load();
   };
 
-  const save = async () => {
+  const save = async (overrideStatus?: "draft" | "published") => {
     if (!editing) return;
+    const current = overrideStatus ? { ...editing, status: overrideStatus } : editing;
     const payload = {
-      ...editing,
-      slug: editing.slug || slugify(editing.name_ar || editing.name_en || ""),
-      price: Number(editing.price) || 0,
-      old_price: editing.old_price ? Number(editing.old_price) : null,
-      cost_price: Number(editing.cost_price) || 0,
-      quantity: Number(editing.quantity) || 0,
-      images: editing.images || [],
+      ...current,
+      slug: current.slug || slugify(current.name_ar || current.name_en || ""),
+      price: Number(current.price) || 0,
+      old_price: current.old_price ? Number(current.old_price) : null,
+      cost_price: Number(current.cost_price) || 0,
+      quantity: Number(current.quantity) || 0,
+      images: current.images || [],
     };
-    const { error } = editing.id
-      ? await supabase.from("products").update(payload).eq("id", editing.id)
+    const { error } = current.id
+      ? await supabase.from("products").update(payload).eq("id", current.id)
       : await supabase.from("products").insert(payload as any);
     if (error) return toast.error(error.message);
-    toast.success(editing.id ? "تم التحديث" : "تمت الإضافة");
+    toast.success(current.id ? "تم التحديث" : overrideStatus === "draft" ? "تم الحفظ كمسودة" : "تم النشر");
     setEditing(null);
     load();
   };
