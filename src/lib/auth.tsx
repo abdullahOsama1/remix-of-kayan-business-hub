@@ -1,79 +1,60 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Session, User } from "@supabase/supabase-js";
+
+type AdminUser = { id: string; username: string };
 
 type Ctx = {
-  session: Session | null;
-  user: User | null;
+  user: AdminUser | null;
   isAdmin: boolean;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  signUp: (email: string, password: string) => Promise<{ error?: string }>;
+  signIn: (username: string, password: string) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
 };
 
 const AuthCtx = createContext<Ctx | null>(null);
 
+const STORAGE_KEY = "kayan_admin_session";
+
+type StoredSession = { token: string; user: AdminUser };
+
+function loadSession(): StoredSession | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as StoredSession;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
-      if (s?.user) {
-        // defer to avoid recursive auth lock
-        setTimeout(async () => {
-          const { data } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", s.user.id)
-            .eq("role", "admin")
-            .maybeSingle();
-          setIsAdmin(!!data);
-        }, 0);
-      } else {
-        setIsAdmin(false);
-      }
-    });
-
-    supabase.auth.getSession().then(async ({ data }) => {
-      setSession(data.session);
-      if (data.session?.user) {
-        const { data: roleRow } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.session.user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        setIsAdmin(!!roleRow);
-      }
-      setLoading(false);
-    });
-
-    return () => sub.subscription.unsubscribe();
+    const s = loadSession();
+    if (s?.user) setUser(s.user);
+    setLoading(false);
   }, []);
 
   const value: Ctx = {
-    session,
-    user: session?.user ?? null,
-    isAdmin,
+    user,
+    isAdmin: !!user,
     loading,
-    signIn: async (email, password) => {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      return error ? { error: error.message } : {};
-    },
-    signUp: async (email, password) => {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${window.location.origin}/kayan-control` },
+    signIn: async (username, password) => {
+      const { data, error } = await supabase.functions.invoke("admin-login", {
+        body: { username, password },
       });
-      return error ? { error: error.message } : {};
+      if (error) return { error: error.message || "تعذر تسجيل الدخول" };
+      if (!data?.ok) return { error: data?.error || "بيانات الدخول غير صحيحة" };
+      const session: StoredSession = { token: data.token, user: data.user };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+      setUser(data.user);
+      return {};
     },
     signOut: async () => {
-      await supabase.auth.signOut();
+      localStorage.removeItem(STORAGE_KEY);
+      setUser(null);
     },
   };
 

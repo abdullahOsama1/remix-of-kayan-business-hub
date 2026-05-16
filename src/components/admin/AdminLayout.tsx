@@ -25,7 +25,7 @@ const nav = [
 ];
 
 export default function AdminLayout() {
-  const { session, isAdmin, loading, signOut } = useAuth();
+  const { isAdmin, loading, signOut } = useAuth();
   const navTo = useNavigate();
 
   if (loading)
@@ -34,7 +34,7 @@ export default function AdminLayout() {
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
-  if (!session || !isAdmin) return <Navigate to="/kayan-control" replace />;
+  if (!isAdmin) return <Navigate to="/kayan-control" replace />;
 
   return (
     <div className="min-h-screen bg-surface flex">
