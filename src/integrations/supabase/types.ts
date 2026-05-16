@@ -359,6 +359,7 @@ export type Database = {
           price: number
           quantity: number
           slug: string
+          status: Database["public"]["Enums"]["product_status"]
           storage_options: string[]
           updated_at: string
         }
@@ -380,6 +381,7 @@ export type Database = {
           price?: number
           quantity?: number
           slug: string
+          status?: Database["public"]["Enums"]["product_status"]
           storage_options?: string[]
           updated_at?: string
         }
@@ -401,6 +403,7 @@ export type Database = {
           price?: number
           quantity?: number
           slug?: string
+          status?: Database["public"]["Enums"]["product_status"]
           storage_options?: string[]
           updated_at?: string
         }
@@ -473,6 +476,7 @@ export type Database = {
       inventory_status: "in_stock" | "reserved" | "sold" | "unavailable"
       order_status: "new" | "in_progress" | "ready" | "delivered" | "cancelled"
       payment_status: "unpaid" | "partial" | "paid"
+      product_status: "draft" | "published"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -605,6 +609,7 @@ export const Constants = {
       inventory_status: ["in_stock", "reserved", "sold", "unavailable"],
       order_status: ["new", "in_progress", "ready", "delivered", "cancelled"],
       payment_status: ["unpaid", "partial", "paid"],
+      product_status: ["draft", "published"],
     },
   },
 } as const
