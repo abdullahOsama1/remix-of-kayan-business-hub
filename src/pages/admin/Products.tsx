@@ -50,6 +50,7 @@ export default function AdminProducts() {
   const [cats, setCats] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [tab, setTab] = useState<"all" | "published" | "draft">("all");
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
 
   const load = async () => {
