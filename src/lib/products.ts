@@ -59,6 +59,7 @@ export function useProducts() {
         .from("products")
         .select("*, categories(slug, name_ar)")
         .eq("available", true)
+        .eq("status", "published")
         .gt("quantity", 0)
         .order("created_at", { ascending: false });
       if (!alive) return;

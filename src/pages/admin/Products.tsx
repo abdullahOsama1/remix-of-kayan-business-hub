@@ -20,6 +20,7 @@ type Product = {
   cost_price: number;
   quantity: number;
   available: boolean;
+  status: "draft" | "published";
   images: string[];
   condition: string | null;
   notes: string | null;
@@ -34,6 +35,7 @@ const empty: Partial<Product> = {
   cost_price: 0,
   quantity: 1,
   available: true,
+  status: "draft",
   images: [],
   description: "",
   condition: "",
@@ -48,6 +50,7 @@ export default function AdminProducts() {
   const [cats, setCats] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [tab, setTab] = useState<"all" | "published" | "draft">("all");
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
 
   const load = async () => {
@@ -66,28 +69,38 @@ export default function AdminProducts() {
 
   const filtered = list.filter(
     (p) =>
-      !q ||
-      p.name_ar.includes(q) ||
-      (p.name_en ?? "").toLowerCase().includes(q.toLowerCase()) ||
-      (p.brand ?? "").toLowerCase().includes(q.toLowerCase())
+      (tab === "all" || p.status === tab) &&
+      (!q ||
+        p.name_ar.includes(q) ||
+        (p.name_en ?? "").toLowerCase().includes(q.toLowerCase()) ||
+        (p.brand ?? "").toLowerCase().includes(q.toLowerCase()))
   );
 
-  const save = async () => {
+  const togglePublish = async (p: Product) => {
+    const next = p.status === "published" ? "draft" : "published";
+    const { error } = await supabase.from("products").update({ status: next }).eq("id", p.id);
+    if (error) return toast.error(error.message);
+    toast.success(next === "published" ? "تم النشر" : "تم التحويل إلى مسودة");
+    load();
+  };
+
+  const save = async (overrideStatus?: "draft" | "published") => {
     if (!editing) return;
+    const current = overrideStatus ? { ...editing, status: overrideStatus } : editing;
     const payload = {
-      ...editing,
-      slug: editing.slug || slugify(editing.name_ar || editing.name_en || ""),
-      price: Number(editing.price) || 0,
-      old_price: editing.old_price ? Number(editing.old_price) : null,
-      cost_price: Number(editing.cost_price) || 0,
-      quantity: Number(editing.quantity) || 0,
-      images: editing.images || [],
+      ...current,
+      slug: current.slug || slugify(current.name_ar || current.name_en || ""),
+      price: Number(current.price) || 0,
+      old_price: current.old_price ? Number(current.old_price) : null,
+      cost_price: Number(current.cost_price) || 0,
+      quantity: Number(current.quantity) || 0,
+      images: current.images || [],
     };
-    const { error } = editing.id
-      ? await supabase.from("products").update(payload).eq("id", editing.id)
+    const { error } = current.id
+      ? await supabase.from("products").update(payload).eq("id", current.id)
       : await supabase.from("products").insert(payload as any);
     if (error) return toast.error(error.message);
-    toast.success(editing.id ? "تم التحديث" : "تمت الإضافة");
+    toast.success(current.id ? "تم التحديث" : overrideStatus === "draft" ? "تم الحفظ كمسودة" : "تم النشر");
     setEditing(null);
     load();
   };
@@ -121,14 +134,27 @@ export default function AdminProducts() {
         }
       />
 
-      <div className="relative mb-5">
-        <Search className="absolute top-1/2 -translate-y-1/2 end-4 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="بحث..."
-          className="w-full h-11 pe-11 ps-4 rounded-full bg-background border border-border text-sm focus:outline-none focus:border-foreground"
-        />
+      <div className="flex flex-wrap items-center gap-3 mb-5">
+        <div className="relative flex-1 min-w-[220px]">
+          <Search className="absolute top-1/2 -translate-y-1/2 end-4 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="بحث..."
+            className="w-full h-11 pe-11 ps-4 rounded-full bg-background border border-border text-sm focus:outline-none focus:border-foreground"
+          />
+        </div>
+        <div className="inline-flex rounded-full bg-surface border border-border p-1 text-xs">
+          {(["all", "published", "draft"] as const).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 h-9 rounded-full transition-colors ${tab === t ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {t === "all" ? "الكل" : t === "published" ? "منشور" : "مسودات"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -160,14 +186,19 @@ export default function AdminProducts() {
                     <td className="p-4 text-muted-foreground">{formatPrice(Number(p.cost_price))}</td>
                     <td className="p-4">{p.quantity}</td>
                     <td className="p-4">
-                      {p.available ? (
-                        <span className="text-xs px-2 py-1 rounded-full bg-accent/10 text-accent">متاح</span>
+                      {p.status === "draft" ? (
+                        <span className="text-xs px-2 py-1 rounded-full bg-amber-500/10 text-amber-600">مسودة</span>
+                      ) : p.available ? (
+                        <span className="text-xs px-2 py-1 rounded-full bg-accent/10 text-accent">منشور</span>
                       ) : (
-                        <span className="text-xs px-2 py-1 rounded-full bg-destructive/10 text-destructive">غير متاح</span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-destructive/10 text-destructive">نفد</span>
                       )}
                     </td>
                     <td className="p-4">
                       <div className="flex gap-2 justify-end">
+                        <button onClick={() => togglePublish(p)} className="text-muted-foreground hover:text-foreground text-xs px-3 h-8 rounded-full border border-border">
+                          {p.status === "published" ? "إلى مسودة" : "نشر"}
+                        </button>
                         <button onClick={() => setEditing(p)} className="text-muted-foreground hover:text-foreground" aria-label="تعديل">
                           <Pencil className="h-4 w-4" strokeWidth={1.5} />
                         </button>
@@ -336,10 +367,16 @@ export default function AdminProducts() {
 
               <div className="flex gap-3 pt-2 sticky bottom-0 bg-background py-4 -mx-8 px-8 border-t border-border">
                 <button
-                  onClick={save}
+                  onClick={() => save("draft")}
+                  className="h-12 px-5 rounded-full bg-surface text-foreground text-sm border border-border hover:bg-muted transition-colors"
+                >
+                  حفظ كمسودة
+                </button>
+                <button
+                  onClick={() => save("published")}
                   className="flex-1 h-12 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity"
                 >
-                  حفظ المنتج
+                  {editing.status === "published" ? "حفظ التعديلات" : "نشر الآن"}
                 </button>
                 <button
                   onClick={() => setEditing(null)}
