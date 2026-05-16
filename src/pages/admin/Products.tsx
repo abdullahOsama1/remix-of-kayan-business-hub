@@ -69,11 +69,20 @@ export default function AdminProducts() {
 
   const filtered = list.filter(
     (p) =>
-      !q ||
-      p.name_ar.includes(q) ||
-      (p.name_en ?? "").toLowerCase().includes(q.toLowerCase()) ||
-      (p.brand ?? "").toLowerCase().includes(q.toLowerCase())
+      (tab === "all" || p.status === tab) &&
+      (!q ||
+        p.name_ar.includes(q) ||
+        (p.name_en ?? "").toLowerCase().includes(q.toLowerCase()) ||
+        (p.brand ?? "").toLowerCase().includes(q.toLowerCase()))
   );
+
+  const togglePublish = async (p: Product) => {
+    const next = p.status === "published" ? "draft" : "published";
+    const { error } = await supabase.from("products").update({ status: next }).eq("id", p.id);
+    if (error) return toast.error(error.message);
+    toast.success(next === "published" ? "تم النشر" : "تم التحويل إلى مسودة");
+    load();
+  };
 
   const save = async () => {
     if (!editing) return;
