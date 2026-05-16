@@ -185,14 +185,19 @@ export default function AdminProducts() {
                     <td className="p-4 text-muted-foreground">{formatPrice(Number(p.cost_price))}</td>
                     <td className="p-4">{p.quantity}</td>
                     <td className="p-4">
-                      {p.available ? (
-                        <span className="text-xs px-2 py-1 rounded-full bg-accent/10 text-accent">متاح</span>
+                      {p.status === "draft" ? (
+                        <span className="text-xs px-2 py-1 rounded-full bg-amber-500/10 text-amber-600">مسودة</span>
+                      ) : p.available ? (
+                        <span className="text-xs px-2 py-1 rounded-full bg-accent/10 text-accent">منشور</span>
                       ) : (
-                        <span className="text-xs px-2 py-1 rounded-full bg-destructive/10 text-destructive">غير متاح</span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-destructive/10 text-destructive">نفد</span>
                       )}
                     </td>
                     <td className="p-4">
                       <div className="flex gap-2 justify-end">
+                        <button onClick={() => togglePublish(p)} className="text-muted-foreground hover:text-foreground text-xs px-3 h-8 rounded-full border border-border">
+                          {p.status === "published" ? "إلى مسودة" : "نشر"}
+                        </button>
                         <button onClick={() => setEditing(p)} className="text-muted-foreground hover:text-foreground" aria-label="تعديل">
                           <Pencil className="h-4 w-4" strokeWidth={1.5} />
                         </button>
