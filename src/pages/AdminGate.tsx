@@ -5,9 +5,8 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 
 export default function AdminGate() {
-  const { session, isAdmin, loading, signIn, signUp } = useAuth();
-  const [mode, setMode] = useState<"signin" | "bootstrap">("signin");
-  const [email, setEmail] = useState("");
+  const { isAdmin, loading, signIn } = useAuth();
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const nav = useNavigate();
@@ -20,36 +19,18 @@ export default function AdminGate() {
     );
   }
 
-  if (session && isAdmin) return <Navigate to="/kayan-control/dashboard" replace />;
-  if (session && !isAdmin) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-surface px-4">
-        <div className="max-w-sm text-center">
-          <h1 className="text-xl font-bold">غير مصرح</h1>
-          <p className="text-sm text-muted-foreground mt-3">
-            هذا الحساب لا يملك صلاحية الإدارة.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  if (isAdmin) return <Navigate to="/kayan-control/dashboard" replace />;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
-    const fn = mode === "bootstrap" ? signUp : signIn;
-    const { error } = await fn(email, password);
+    const { error } = await signIn(username, password);
     setBusy(false);
     if (error) {
       toast.error(error);
       return;
     }
-    if (mode === "bootstrap") {
-      toast.success("تم إنشاء حساب المالك. سجّل الدخول الآن.");
-      setMode("signin");
-    } else {
-      nav("/kayan-control/dashboard");
-    }
+    nav("/kayan-control/dashboard");
   };
 
   return (
@@ -62,23 +43,22 @@ export default function AdminGate() {
           <Lock className="h-5 w-5" strokeWidth={1.5} />
         </div>
         <h1 className="text-2xl font-bold text-center mt-5">KΛYΛN Control</h1>
-        <p className="text-xs text-center text-muted-foreground mt-2">
-          {mode === "bootstrap" ? "تهيئة حساب المالك" : "دخول الإدارة"}
-        </p>
+        <p className="text-xs text-center text-muted-foreground mt-2">دخول الإدارة</p>
 
         <div className="mt-7 space-y-3">
           <input
-            type="email"
+            type="text"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="البريد الإلكتروني"
+            autoComplete="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="اسم المستخدم"
             className="w-full h-11 px-4 rounded-lg bg-surface border border-border focus:outline-none focus:border-foreground text-sm"
           />
           <input
             type="password"
             required
-            minLength={6}
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="كلمة المرور"
@@ -92,17 +72,7 @@ export default function AdminGate() {
           className="w-full h-11 mt-5 rounded-full bg-foreground text-background text-sm font-medium inline-flex items-center justify-center gap-2 disabled:opacity-60"
         >
           {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-          {mode === "bootstrap" ? "إنشاء حساب المالك" : "دخول"}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setMode(mode === "signin" ? "bootstrap" : "signin")}
-          className="w-full mt-4 text-xs text-muted-foreground hover:text-foreground"
-        >
-          {mode === "signin"
-            ? "أول استخدام؟ إنشاء حساب المالك"
-            : "لديك حساب؟ سجّل الدخول"}
+          دخول
         </button>
       </form>
     </div>
