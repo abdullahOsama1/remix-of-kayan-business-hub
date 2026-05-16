@@ -367,16 +367,16 @@ export default function AdminProducts() {
 
               <div className="flex gap-3 pt-2 sticky bottom-0 bg-background py-4 -mx-8 px-8 border-t border-border">
                 <button
-                  onClick={() => { setEditing({ ...editing, status: "draft" }); setTimeout(save, 0); }}
+                  onClick={() => save("draft")}
                   className="h-12 px-5 rounded-full bg-surface text-foreground text-sm border border-border hover:bg-muted transition-colors"
                 >
                   حفظ كمسودة
                 </button>
                 <button
-                  onClick={() => { setEditing({ ...editing, status: "published" }); setTimeout(save, 0); }}
+                  onClick={() => save("published")}
                   className="flex-1 h-12 rounded-full bg-foreground text-background text-sm font-medium hover:opacity-90 transition-opacity"
                 >
-                  {editing.status === "published" ? "حفظ" : "نشر الآن"}
+                  {editing.status === "published" ? "حفظ التعديلات" : "نشر الآن"}
                 </button>
                 <button
                   onClick={() => setEditing(null)}
