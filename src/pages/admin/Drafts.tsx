@@ -44,22 +44,40 @@ export default function AdminDrafts() {
   };
 
   const approve = async (draft: Draft) => {
-    const rows = draft.parsed.map((p) => ({
-      slug: slugify(`${p.name}-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`),
-      name_ar: p.name,
-      brand: p.brand ?? null,
-      price: Number(p.price) || 0,
-      cost_price: Number(p.cost_price) || 0,
-      quantity: 1,
-      available: true,
-      condition: p.condition ?? null,
-      notes: [p.storage, p.color, p.battery ? `بطارية ${p.battery}%` : "", p.notes].filter(Boolean).join(" · "),
-      images: [],
-    }));
+    // Load pricing rules from settings
+    const { data: rules } = await supabase.from("settings").select("key,value").in("key", ["default_profit_margin","packaging_fee"]);
+    const ruleMap = Object.fromEntries((rules ?? []).map((r: any) => [r.key, Number((r.value?.v ?? r.value) || 0)]));
+    const margin = ruleMap["default_profit_margin"] || 0;
+    const packaging = ruleMap["packaging_fee"] || 0;
+
+    const rows = draft.parsed.map((p) => {
+      const cost = Number(p.cost_price) || 0;
+      const sellingPrice = Number(p.price) > 0 ? Number(p.price) : cost + margin + packaging;
+      return {
+        slug: slugify(`${p.name}-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`),
+        name_ar: p.name,
+        brand: p.brand ?? null,
+        price: sellingPrice,
+        cost_price: cost,
+        quantity: 1,
+        available: true,
+        status: "published" as const,
+        condition: p.condition ?? null,
+        notes: [p.specs, p.storage, p.color, p.battery ? `بطارية ${p.battery}%` : "", p.notes].filter(Boolean).join(" · "),
+        images: [],
+      };
+    });
     const { error } = await supabase.from("products").insert(rows as any);
     if (error) return toast.error(error.message);
     await supabase.from("ai_drafts").update({ status: "approved" as any }).eq("id", draft.id);
-    toast.success(`تم اعتماد ${rows.length} منتج إلى المخزون`);
+    toast.success(`تم نشر ${rows.length} منتج`);
+    load();
+  };
+
+  const reject = async (draft: Draft) => {
+    const { error } = await supabase.from("ai_drafts").update({ status: "rejected" as any }).eq("id", draft.id);
+    if (error) return toast.error(error.message);
+    toast.success("تم الرفض");
     load();
   };
 
