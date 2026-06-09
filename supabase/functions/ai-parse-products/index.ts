@@ -4,12 +4,13 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const SYSTEM = `You extract phone/device product listings from raw Arabic/English WhatsApp logs.
 Strip timestamps, sender names, emojis. Detect MULTIPLE products in one message.
-Return ONLY valid JSON of shape:
-{"products":[{"name":string,"brand"?:string,"storage"?:string,"color"?:string,"condition"?:string,"battery"?:number,"price"?:number,"cost_price"?:number,"category"?:string,"notes"?:string}]}
-- battery is integer percent (no %)
-- price/cost_price are numbers (no currency)
-- name should be concise device name (e.g. "iPhone 13 Pro")
-- If only selling price is mentioned, leave cost_price empty.`;
+Return ONLY valid JSON:
+{"products":[{"name":string,"brand"?:string,"specs"?:string,"storage"?:string,"color"?:string,"condition"?:string,"battery"?:number,"price"?:number,"cost_price"?:number,"category"?:string,"notes"?:string}]}
+- "cost_price" is the WHOLESALE/PURCHASE price (سعر الجملة / التكلفة). If only one price is mentioned, treat it as cost_price.
+- "price" is the SELLING price (سعر البيع). Leave empty if not mentioned.
+- battery is integer percent (no %). price/cost_price are numbers (no currency).
+- "specs" is a short technical summary (RAM, screen, camera) when present.
+- name is concise (e.g. "iPhone 13 Pro").`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
