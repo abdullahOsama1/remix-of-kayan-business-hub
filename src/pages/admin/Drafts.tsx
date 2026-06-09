@@ -14,6 +14,7 @@ export default function AdminDrafts() {
   const [loading, setLoading] = useState(true);
   const [raw, setRaw] = useState("");
   const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<Parsed[] | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -30,10 +31,21 @@ export default function AdminDrafts() {
     setBusy(false);
     if (error) return toast.error(error.message);
     if (!data?.products?.length) return toast.error("لم يُستخرج أي منتج");
-    const { error: e2 } = await supabase.from("ai_drafts").insert({ raw_input: raw, parsed: data.products, source: "text" } as any);
-    if (e2) return toast.error(e2.message);
-    setRaw("");
-    toast.success(`تم استخراج ${data.products.length} منتج`);
+    setPreview(data.products);
+    toast.success(`تم استخراج ${data.products.length} منتج — راجع ثم احفظ`);
+  };
+
+  const updatePreview = (idx: number, patch: Partial<Parsed>) => {
+    setPreview((p) => (p ? p.map((x, i) => (i === idx ? { ...x, ...patch } : x)) : p));
+  };
+  const removePreview = (idx: number) => setPreview((p) => (p ? p.filter((_, i) => i !== idx) : p));
+
+  const savePreview = async () => {
+    if (!preview?.length) return;
+    const { error } = await supabase.from("ai_drafts").insert({ raw_input: raw, parsed: preview, source: "text" } as any);
+    if (error) return toast.error(error.message);
+    toast.success("تم الحفظ كمسودة");
+    setRaw(""); setPreview(null);
     load();
   };
 
