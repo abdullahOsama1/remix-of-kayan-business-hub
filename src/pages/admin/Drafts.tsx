@@ -119,9 +119,14 @@ export default function AdminDrafts() {
                 <div className="text-xs text-muted-foreground">{new Date(d.created_at).toLocaleString("ar-EG")} · <span className="px-2 py-0.5 rounded-full bg-muted">{d.status}</span></div>
                 <div className="flex gap-2">
                   {d.status === "pending" && (
-                    <button onClick={() => approve(d)} className="h-9 px-4 rounded-full bg-accent text-accent-foreground text-xs font-medium inline-flex items-center gap-1">
-                      <Check className="h-3.5 w-3.5" /> اعتماد إلى المخزون
-                    </button>
+                    <>
+                      <button onClick={() => approve(d)} className="h-9 px-4 rounded-full bg-foreground text-background text-xs font-medium inline-flex items-center gap-1">
+                        <Check className="h-3.5 w-3.5" /> نشر
+                      </button>
+                      <button onClick={() => reject(d)} className="h-9 px-4 rounded-full border border-border text-xs text-muted-foreground hover:text-destructive hover:border-destructive transition-colors">
+                        رفض
+                      </button>
+                    </>
                   )}
                   <button onClick={() => remove(d.id)} className="h-9 w-9 rounded-full hover:bg-muted text-muted-foreground hover:text-destructive inline-flex items-center justify-center"><Trash2 className="h-4 w-4" strokeWidth={1.5} /></button>
                 </div>
