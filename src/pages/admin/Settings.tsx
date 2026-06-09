@@ -8,6 +8,8 @@ const FIELDS: { key: string; label: string; type?: string }[] = [
   { key: "store_name", label: "اسم المتجر" },
   { key: "hero_title", label: "عنوان الواجهة" },
   { key: "hero_subtitle", label: "نص الواجهة الفرعي" },
+  { key: "default_profit_margin", label: "هامش الربح الافتراضي (محرك التسعير)" },
+  { key: "packaging_fee", label: "رسوم التغليف (محرك التسعير)" },
   { key: "whatsapp_number", label: "رقم واتساب (دولي بدون +)" },
   { key: "instagram", label: "Instagram URL" },
   { key: "facebook", label: "Facebook URL" },

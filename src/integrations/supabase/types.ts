@@ -482,6 +482,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      compute_selling_price: { Args: { _wholesale: number }; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
