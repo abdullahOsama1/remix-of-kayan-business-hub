@@ -4,7 +4,7 @@ import { PageContainer, PageHeader } from "@/components/admin/Page";
 import { Loader2, Sparkles, Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
-type Parsed = { name: string; brand?: string; storage?: string; color?: string; condition?: string; battery?: number; price?: number; cost_price?: number; notes?: string; category?: string };
+type Parsed = { name: string; brand?: string; specs?: string; storage?: string; color?: string; condition?: string; battery?: number; price?: number; cost_price?: number; notes?: string; category?: string };
 type Draft = { id: string; raw_input: string | null; parsed: Parsed[]; status: string; created_at: string };
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^\w\u0600-\u06FF]+/g, "-").replace(/^-|-$/g, "") || `p-${Date.now()}`;
