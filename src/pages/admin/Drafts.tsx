@@ -14,6 +14,7 @@ export default function AdminDrafts() {
   const [loading, setLoading] = useState(true);
   const [raw, setRaw] = useState("");
   const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState<Parsed[] | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -30,10 +31,21 @@ export default function AdminDrafts() {
     setBusy(false);
     if (error) return toast.error(error.message);
     if (!data?.products?.length) return toast.error("لم يُستخرج أي منتج");
-    const { error: e2 } = await supabase.from("ai_drafts").insert({ raw_input: raw, parsed: data.products, source: "text" } as any);
-    if (e2) return toast.error(e2.message);
-    setRaw("");
-    toast.success(`تم استخراج ${data.products.length} منتج`);
+    setPreview(data.products);
+    toast.success(`تم استخراج ${data.products.length} منتج — راجع ثم احفظ`);
+  };
+
+  const updatePreview = (idx: number, patch: Partial<Parsed>) => {
+    setPreview((p) => (p ? p.map((x, i) => (i === idx ? { ...x, ...patch } : x)) : p));
+  };
+  const removePreview = (idx: number) => setPreview((p) => (p ? p.filter((_, i) => i !== idx) : p));
+
+  const savePreview = async () => {
+    if (!preview?.length) return;
+    const { error } = await supabase.from("ai_drafts").insert({ raw_input: raw, parsed: preview, source: "text" } as any);
+    if (error) return toast.error(error.message);
+    toast.success("تم الحفظ كمسودة");
+    setRaw(""); setPreview(null);
     load();
   };
 
@@ -99,13 +111,49 @@ export default function AdminDrafts() {
           placeholder="ألصق رسائل واتساب هنا (يمكن لصق عدة منتجات)..."
           className="w-full px-4 py-3 rounded-lg bg-surface border border-border text-sm focus:outline-none focus:border-foreground"
         />
-        <div className="flex justify-end mt-3">
-          <button onClick={parse} disabled={busy || !raw.trim()} className="h-11 px-6 rounded-full bg-foreground text-background text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60">
+        <div className="flex justify-between items-center mt-3 gap-3">
+          <p className="text-xs text-muted-foreground">سيقوم Gemini بتنظيف التوقيتات والأسماء والإيموجي ثم استخراج المنتجات وتعبئة الحقول تلقائياً.</p>
+          <button onClick={parse} disabled={busy || !raw.trim()} className="h-11 px-6 rounded-full bg-foreground text-background text-sm font-medium inline-flex items-center gap-2 disabled:opacity-60 shrink-0">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" strokeWidth={1.75} />}
             تحليل بالذكاء الاصطناعي
           </button>
         </div>
       </div>
+
+      {preview && (
+        <div className="bg-background rounded-2xl border-2 border-foreground/20 overflow-hidden mb-6">
+          <div className="flex items-center justify-between p-4 border-b border-border bg-surface">
+            <div className="text-sm font-medium">معاينة ({preview.length}) — حقول تم تعبئتها تلقائياً</div>
+            <div className="flex gap-2">
+              <button onClick={savePreview} className="h-9 px-4 rounded-full bg-foreground text-background text-xs font-medium inline-flex items-center gap-1"><Check className="h-3.5 w-3.5" /> حفظ كمسودة</button>
+              <button onClick={() => setPreview(null)} className="h-9 px-4 rounded-full border border-border text-xs">إلغاء</button>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-surface text-muted-foreground text-xs">
+                <tr><th className="text-start p-3">الاسم</th><th className="text-start p-3">الماركة</th><th className="text-start p-3">السعة</th><th className="text-start p-3">اللون</th><th className="text-start p-3">البطارية</th><th className="text-start p-3">الحالة</th><th className="text-start p-3">التكلفة</th><th className="text-start p-3">السعر</th><th></th></tr>
+              </thead>
+              <tbody>
+                {preview.map((p, i) => (
+                  <tr key={i} className="border-t border-border">
+                    <td className="p-2"><input value={p.name ?? ""} onChange={(e) => updatePreview(i, { name: e.target.value })} className="w-44 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                    <td className="p-2"><input value={p.brand ?? ""} onChange={(e) => updatePreview(i, { brand: e.target.value })} className="w-24 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                    <td className="p-2"><input value={p.storage ?? ""} onChange={(e) => updatePreview(i, { storage: e.target.value })} className="w-20 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                    <td className="p-2"><input value={p.color ?? ""} onChange={(e) => updatePreview(i, { color: e.target.value })} className="w-24 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                    <td className="p-2"><input type="number" value={p.battery ?? ""} onChange={(e) => updatePreview(i, { battery: Number(e.target.value) })} className="w-16 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                    <td className="p-2"><input value={p.condition ?? ""} onChange={(e) => updatePreview(i, { condition: e.target.value })} className="w-24 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                    <td className="p-2"><input type="number" value={p.cost_price ?? ""} onChange={(e) => updatePreview(i, { cost_price: Number(e.target.value) })} className="w-24 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                    <td className="p-2"><input type="number" value={p.price ?? ""} onChange={(e) => updatePreview(i, { price: Number(e.target.value) })} className="w-24 h-9 px-2 rounded-lg bg-surface border border-border text-sm" /></td>
+                    <td className="p-2"><button onClick={() => removePreview(i)} className="h-8 w-8 rounded-full hover:bg-muted text-muted-foreground hover:text-destructive inline-flex items-center justify-center"><Trash2 className="h-4 w-4" /></button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
 
       {loading ? (
         <div className="flex justify-center py-20"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
